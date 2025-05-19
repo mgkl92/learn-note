@@ -8,6 +8,12 @@ ssize_t Buffer::readFd(int fd, int * saveErrno) {
     // 64 kB
     char extrabuf[65536] = { 0 };
 
+    /**
+     * struct iovec {
+     *      void * iov_base;
+     *      size_t iov_len;
+     * };
+     */
     struct iovec vec[2];
     const size_t writable = writableBytes();
 
@@ -27,6 +33,8 @@ ssize_t Buffer::readFd(int fd, int * saveErrno) {
     } else if (n <= writable) {
         writerIndex_ += n;
     } else {
+        // extrabuf 中也写入了数据
+        // 写入数据字节数为 n - writable 
         writerIndex_ = buffer_.size();
         append(extrabuf, n - writable);
     }

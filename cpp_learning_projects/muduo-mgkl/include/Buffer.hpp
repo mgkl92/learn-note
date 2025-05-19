@@ -8,6 +8,15 @@
 using std::string;
 using std::vector;
 
+/**
+ * | prependable bytes | readable bytes | writable bytes | 
+ * 0               readerindex      writerindex        size
+ * 
+ * prependable 中预留固定 kCheapPrepend 空间留作快速填充使用，用于解决可能的粘包问题或作为协议字段等
+ * prependable bytes 中仅 kCheapPrepend ~ readerindex 空间
+ * 可用作当 writable bytes 空间不能够满足写操作时，可以将 readerindex 和 writerindex 进行腾挪以获取足够的写空间
+ * 即缓冲区中有足够可用的空间用于写操作，否则将扩容。
+ */
 class Buffer {
 public:
     static const size_t kCheapPrepend = 8;
@@ -57,6 +66,8 @@ public:
 
     // 从缓冲区中读取数据
     string retrieveAsString(size_t len) {
+        // 有足够的可读数据
+        assert(len <= readableBytes()) 
         std::string result(peek(), len);
         retrieve(len);
         return result;
@@ -93,6 +104,7 @@ public:
     ssize_t writeFd(int fd, int * saveErrno);
 
 private:
+    // buffer 底层数组的首地址
     char * begin() {
         return &(*buffer_.begin());
     }
