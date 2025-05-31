@@ -40,7 +40,7 @@ size_t dsu::find(size_t x) {
 
 // 合并两个集合
 void dsu::unite(size_t x, size_t y) {
-    path[find(x)] = find(y);
+    pa[find(x)] = find(y);
 }
 
 // 合并优化
@@ -122,13 +122,18 @@ void up(int x) {
 // 向下调整：交换堆顶与堆数组末尾元素，动态的向下调整，并删除堆数组末尾元素
 void down(int x) {
     while (x * 2 <= n) {
+        // 令 t 指向 x 具有最大值的子节点
         int t = x * 2;
         if（t + 1 <= n && h[t + 1] > h[t]) {
             ++t;
         }
+        
+        // 判断是否满足堆性质
         if (h[t] <= h[x]) { break; }
 
         std::swap(h[x], h[t]);
+
+        // 迭代的调整子堆
         x = t;
     }
 }
@@ -141,7 +146,7 @@ void build(int n) {
     }
 }
 
-// 
+// 自定向上不断地合并两个堆
 void build(int n) {
     for (int i = n; n >= 1; --i) {
         down(i);
@@ -176,7 +181,7 @@ st.push(x);
 
 # 树状数组
 
-梳妆数组是一种支持单点修改和区间查询的数据结构。
+树状数组是一种支持单点修改和区间查询的数据结构。
 
 ```cpp
 
@@ -283,7 +288,6 @@ TreeNode* insert(TreeNode* root, int value) {
 }
 
 // 元素删除
-
 TreeNode* erase(TreeNode *root, int value) {
     if (root == nullptr) {
         return root;
@@ -380,7 +384,7 @@ int rank(TreeNode *root, int k) {
 TreeNode* rorate_right(TreeNode* root) {
     TreeNode* temp = root->left;
     root->left = temp->right;
-    temp->left = roo;
+    temp->left = root;
     
     // 更新树高度
     update_height(root);
@@ -488,3 +492,13 @@ BTreeNode* search(int k) {
 ## B+ 树
 
 ## 红黑树
+
+**性质**
+
+- 节点为红色或黑色
+
+- NIL 节点（空叶子节点）为黑色
+  
+- 红色节点的子节点为黑色
+
+- 从根节点到 NIL 节点每条路径上黑色节点数目相同
