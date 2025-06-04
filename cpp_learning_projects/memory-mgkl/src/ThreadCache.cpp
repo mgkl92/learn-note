@@ -1,6 +1,7 @@
 #include "../include/ThreadCache.hpp"
 #include "../include/CentralCache.hpp"
 #include <cstddef>
+#include <stdlib.h>
 
 namespace mgkl {
     void * ThreadCache::allocate(size_t size) {

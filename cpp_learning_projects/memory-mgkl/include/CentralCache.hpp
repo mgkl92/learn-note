@@ -5,6 +5,10 @@
 #include <mutex>
 
 namespace mgkl {
+    /**
+     * 1. CentralCache 在底层使用哈希表（大小 32K）进行内存管理；
+     * 2. 使用 atomic_flag 实现自旋锁；
+     */
     class CentralCache {
     public:
         static CentralCache & getInstance() {

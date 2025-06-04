@@ -10,6 +10,9 @@ namespace mgkl {
     // 每次向 PageCache 申请缓存页数
     static const size_t SPAN_PAGES = 8;
 
+    /**
+     * 
+     */
     void * CentralCache::fetchRange(size_t index) {
         // 使用系统调用申请较大内存空间
         if (index >= FREE_LIST_SIZE) {
@@ -56,14 +59,14 @@ namespace mgkl {
                     void * next = *reinterpret_cast<void **>(res);
                     *reinterpret_cast<void **>(res) = nullptr;
 
-                    centralFreeList_[index].store(next, std::memory_order_release);
+                    centralFreeList_[index].store(next, std::memory_order_acquire);
                 }
             } else {
                 // 直接从中心缓存自由链表中申请内存对象
                 void * next = *reinterpret_cast<void **>(res);
                 *reinterpret_cast<void **>(res) = nullptr;
 
-                centralFreeList_[index].store(next, std::memory_order_release);
+                centralFreeList_[index].store(next, std::memory_order_acquire);
             }
         } catch (...) {
             // 确保异常发生锁仍能够被正常释放

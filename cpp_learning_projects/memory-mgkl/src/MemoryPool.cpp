@@ -45,7 +45,9 @@ namespace mgkl {
             }
 
             t = curSlot_;
-            curSlot_ += slotSize_ / sizeof(Slot);
+             // Slot 结构体本身只存储一个指针变量，不储内存大小相关信息
+             // 由 slotSize_ 决定当前内存池对象存储 Slot 实际的大小
+            curSlot_ += slotSize_ / sizeof(Slot); 
         }
 
         return t;
@@ -65,6 +67,7 @@ namespace mgkl {
         void * t = operator new(blockSize_);
 
         // 头插法
+        // 将整个 block 视为一个 Slot
         (reinterpret_cast<Slot *>(t))->next = firstBlock_;
         firstBlock_ = reinterpret_cast<Slot *>(t);
 
@@ -82,7 +85,7 @@ namespace mgkl {
             Slot * oldHead = freeList_.load(std::memory_order_relaxed);
             slot->next.store(oldHead, std::memory_order_relaxed);
 
-            if (freeList_.compare_exchange_weak(oldHead, slot, std::memory_order_relaxed, std::memory_order_relaxed)) {
+            if (freeList_.compare_exchange_weak(oldHead, slot, std::memory_order_release, std::memory_order_relaxed)) {
                 return true;
             }
         }
@@ -94,7 +97,7 @@ namespace mgkl {
 
     Slot * MemoryPool::popFreeList() {
         while (true) {
-            Slot * oldHead = freeList_.load(std::memory_order_acquire);
+            Slot * oldHead = freeList_.load(std::memory_order_relaxed);
             if (!oldHead) {
                 return nullptr;
             }

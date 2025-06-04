@@ -4,6 +4,15 @@
 #include <cstring>
 
 namespace mgkl {
+    /**
+     * PageCache 内存分配逻辑
+     * 1. 查询 freeSpan_ 是否存在可用内存对象
+     *      1.1 如果存在，分配所需的内存空间并将多余内存空间返回给 freeSpan_；
+     *      1.2 如果不存在，转步骤 2;
+     * 2. 直接使用 systemAlloc 分配所需的内存空间并返回。
+     * 
+     * 注：systemAlloc 在系统底层使用 mmap 进行内存够分配。
+     */
     void * PageCache::allocateSpan(size_t numPages) {
         std::lock_guard<std::mutex> lock(mutex_);
 
@@ -19,7 +28,7 @@ namespace mgkl {
                 freeSpans_.erase(it);
             }
 
-            // 如果 Span 包含页数大于所需页数，对齐分割
+            // 如果 Span 包含页数大于所需页数，对其分割
             if (span->numPages > numPages) {
                 // 分理出多余内存页
                 Span * newSpan = new Span;
@@ -54,6 +63,15 @@ namespace mgkl {
         return memory;
     }
 
+    /**
+     * PageCache 内存回收逻辑
+     * 1. 判断所需释放内存地址是否由 PageCahce 管理;
+     * 2. 尝试合并相邻的两个 Span。
+     *      2.1 在自由链表中查询是否存在相邻的 Span：
+     *          1) 不存在；
+     *          2）存在且为队列中的唯一元素；
+     *          3）存在于队列中（需要进行迭代查找该内存对象；
+     */
     void PageCache::deallocateSpan(void * p, size_t numPages) {
         std::lock_guard<std::mutex> lock(mutex_);
 
