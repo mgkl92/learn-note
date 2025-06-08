@@ -19,3 +19,16 @@ InetAddress::InetAddress(const char *ip, uint16_t port) :
 
 InetAddress::~InetAddress() {
 }
+
+void InetAddress::setInetAddr(sockaddr_in addr_, socklen_t addr_len_) {
+    addr = addr_;
+    addr_len = addr_len_;
+}
+
+sockaddr_in InetAddress::getAddr() {
+    return addr;
+}
+
+socklen_t InetAddress::getAddrLen() {
+    return addr_len;
+}

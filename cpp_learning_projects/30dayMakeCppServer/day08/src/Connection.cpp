@@ -12,18 +12,14 @@ Connection::Connection(EventLoop *loop_, Socket *sock_) :
     channel = new Channel(loop, sock->getFd());
     
     std::function<void()> callback = std::bind(&Connection::echo, this, sock->getFd());
+    
     channel->setCallback(callback);
     channel->enableReading();
 }
 
 Connection::~Connection() {
-    if (channel) {
-        delete channel;
-    }
-
-    if (sock) {
-        delete sock;
-    }
+    delete channel;
+    delete sock;
 }
 
 void Connection::echo(int sockfd) {

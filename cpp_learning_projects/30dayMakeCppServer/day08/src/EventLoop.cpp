@@ -10,9 +10,7 @@ EventLoop::EventLoop() :
 }
 
 EventLoop::~EventLoop() {
-    if (ep) {
-        delete ep;
-    }
+    delete ep;
 }
 
 void EventLoop::loop() {

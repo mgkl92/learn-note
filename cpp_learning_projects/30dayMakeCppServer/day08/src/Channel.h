@@ -7,7 +7,6 @@ class Epoll;
 class EventLoop;
 
 class Channel {
-    // Epoll *ep;
     EventLoop *loop;
 
     int fd;
@@ -21,8 +20,6 @@ class Channel {
     std::function<void()> callback;
 
 public:
-
-    // Channel(Epoll *ep_, int fd_);
     Channel(EventLoop *, int);
 
     ~Channel();
