@@ -12,14 +12,11 @@ private:
     EventLoop *loop;
 
     Socket *sock;
-
-    InetAddress *addr;
-
+    
     Channel *acceptChannel;
 
-public:
-
     std::function<void(Socket*)> newConnectionCallback;
+public:
 
     Acceptor(EventLoop *);
     

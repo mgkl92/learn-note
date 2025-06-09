@@ -12,13 +12,8 @@ EventLoop::EventLoop() :
 }
 
 EventLoop::~EventLoop() {
-    if (ep) {
-        delete ep;
-    }
-
-    if (threadPool) {
-        delete threadPool;
-    }
+    delete ep;
+    delete threadPool;
 }
 
 void EventLoop::loop() {

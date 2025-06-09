@@ -32,11 +32,3 @@ sockaddr_in InetAddress::getAddr() {
 socklen_t InetAddress::getAddrLen() {
     return addr_len;
 }
-
-char *InetAddress::getIp() {
-   return ::inet_ntoa(addr.sin_addr);
-}
-
-uint16_t InetAddress::getPort() {
-    return ::ntohs(addr.sin_port);
-}

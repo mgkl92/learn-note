@@ -19,8 +19,4 @@ public:
     sockaddr_in getAddr();
 
     socklen_t getAddrLen();
-
-    char * getIp();
-
-    uint16_t getPort();
 };

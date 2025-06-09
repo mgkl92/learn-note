@@ -7,7 +7,6 @@ class Epoll;
 class EventLoop;
 
 class Channel {
-    // Epoll *ep;
     EventLoop *loop;
 
     int fd;
@@ -18,15 +17,13 @@ class Channel {
 
     bool inEpoll;
 
-    // std::function<void()> callback;
-    
+    bool useThreadPool;
+
     std::function<void()> readCallback;
-    
+
     std::function<void()> writeCallback;
 
 public:
-
-    // Channel(Epoll *ep_, int fd_);
     Channel(EventLoop *, int);
 
     ~Channel();
@@ -47,6 +44,9 @@ public:
 
     void handleEvent();
 
-    // void setCallback(std::function<void()>);
     void setReadCallback(std::function<void()>);
+
+    void setUseThreadPool(bool = true);
+
+    void useET();
 };

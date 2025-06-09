@@ -4,6 +4,7 @@
 
 class EventLoop;
 class Socket;
+class InetAddress;
 class Channel;
 
 class Acceptor {
@@ -12,6 +13,7 @@ private:
 
     Socket *sock;
 
+    InetAddress *addr;
 
     Channel *acceptChannel;
 

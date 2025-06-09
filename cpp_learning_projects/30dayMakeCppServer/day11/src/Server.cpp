@@ -15,85 +15,35 @@
 Server::Server(EventLoop *loop_) :
     loop(loop_),
     acceptor(nullptr) {
-    // Socket *serv_sock = new Socket();
-    // InetAddress *serv_addr = new InetAddress("127.0.0.1", 8888);
-
-    // serv_sock->bind(serv_addr);
-    // serv_sock->listen();
-    // serv_sock->setnonblocking();
-
-    // Channel *serv_channel = new Channel(loop, serv_sock->getFd());
-    // std::function<void()> cb = std::bind(&Server::newConnection, this, serv_sock);
-    // serv_channel->setCallback(cb);
-    // serv_channel->enableReading();
-
     using namespace std::placeholders;
-    
+
     acceptor = new Acceptor(loop);
     std::function<void(Socket *)> callback = std::bind(&Server::newConnection, this, _1);
     acceptor->setNewConnectionCallback(callback);
 }
 
 Server::~Server() {
-    if (acceptor) {
-        delete acceptor;
-    }
-}
-
-void Server::handReadEvent(int sockfd) {
-    char buf[READ_BUFFER];
-    while (true) { // 由于使用非阻塞IO，读取客户端buffer，一次读取buf大小数据，直到全部读取完毕
-        bzero(&buf, sizeof(buf));
-
-        ssize_t bytes_read = ::read(sockfd, buf, sizeof(buf));
-
-        if (bytes_read > 0) {
-            printf("message from client fd %d: %s\n", sockfd, buf);
-            ::write(sockfd, buf, sizeof(buf));
-        } else if (bytes_read == -1 && errno == EINTR) { // 客户端正常中断、继续读取
-            printf("continue reading");
-            continue;
-        } else if (bytes_read == -1 && ((errno == EAGAIN) || (errno == EWOULDBLOCK))) { // 非阻塞IO，这个条件表示数据全部读取完毕
-            printf("finish reading once, errno: %d\n", errno);
-            break;
-        } else if (bytes_read == 0) { // EOF，客户端断开连接
-            printf("EOF, client fd %d disconnected\n", sockfd);
-            ::close(sockfd); // 关闭socket会自动将文件描述符从epoll树上移除
-            break;
-        }
-    }
+    delete acceptor;
 }
 
 void Server::newConnection(Socket *serv_sock) {
-    InetAddress *client_addr = new InetAddress();
-    Socket *client_sock = new Socket(serv_sock->accept(client_addr));
+    using namespace std::placeholders;
 
-    printf("New Client fd %d ! IP: %s, Port: %d\n", client_sock->getFd(), ::inet_ntoa(client_addr->addr.sin_addr), ::ntohs(client_addr->addr.sin_port));
+    if (serv_sock->getFd() != -1) {
+        Connection *conn = new Connection(loop, serv_sock);
+        std::function<void(int)> callback = std::bind(&Server::deleteConnection, this, _1);
+        conn->setDeleteConnectionCallback(callback);
+        // serv_sock->setnonblocking();
 
-    client_sock->setnonblocking();
-
-    Channel *client_channel = new Channel(loop, client_sock->getFd());
-    std::function<void()> cb = std::bind(&Server::handReadEvent, this, client_sock->getFd());
-    client_channel->setCallback(cb);
-    client_channel->enableReading();
+        connections[serv_sock->getFd()] = conn;
+    }
 }
 
-// void Server::deleteConnection(Socket *sock) {
-//     Connection *conn = connections[sock->getFd()];
-//     if (connections.find(sock->getFd()) != connections.end()) {
-//         connections.erase(sock->getFd());
-//         delete conn;
-//     }
-// }
-
 void Server::deleteConnection(int sockfd) {
-    if (sockfd != -1) {
-        auto it = connections.find(sockfd);
-        if (it != connections.end()) {
-            Connection *conn = connections[sockfd];
-            connections.erase(sockfd);
-
-            delete conn;
-        }
+    Connection *conn = connections[sockfd];
+    if (connections.find(sockfd) != connections.end()) {
+        connections.erase(sockfd);
+        ::close(sockfd);
+        // delete conn;
     }
 }

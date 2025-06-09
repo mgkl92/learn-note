@@ -1,23 +1,23 @@
 #include "Channel.h"
-// #include "Epoll.h"
 #include "EventLoop.h"
 
-// Channel::Channel(Epoll *ep_, int fd_) :
-//     ep(ep_), fd(fd_), events(0), revents(0), inEpoll(false) {
-// }
+#include <unistd.h>
 
 Channel::Channel(EventLoop *loop_, int fd_) :
     loop(loop_), fd(fd_), events(0), revents(0), inEpoll(false) {
 }
+
 Channel::~Channel() {
+    if (fd != -1) {
+        ::close(fd);
+        fd = -1;
+    }
 }
 
 void Channel::enableReading() {
     events = EPOLLIN | EPOLLET;
-    // ep->updateChannel(this);
     loop->updateChannel(this);
 }
-
 
 int Channel::getFd() {
     return fd;

@@ -17,9 +17,9 @@ private:
 
     Channel *acceptChannel;
 
-public:
-
     std::function<void(Socket*)> newConnectionCallback;
+    
+public:
 
     Acceptor(EventLoop *);
     

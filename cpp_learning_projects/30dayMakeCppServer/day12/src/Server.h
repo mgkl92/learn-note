@@ -18,17 +18,14 @@ class Server {
 
     std::vector<EventLoop *> subReactors;
 
-    ThreadPool *threadPool;
+    ThreadPool *thpool;
 
 public:
     Server(EventLoop *);
 
     ~Server();
 
-    void handReadEvent(int);
-
     void newConnection(Socket *);
 
-    // void deleteConnection(Socket *);
-    void deleteConnection(int sockfd);
+    void deleteConnection(int);
 };

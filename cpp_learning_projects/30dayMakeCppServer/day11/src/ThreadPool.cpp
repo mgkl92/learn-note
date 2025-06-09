@@ -6,7 +6,7 @@ ThreadPool::ThreadPool(int size) {
             while (true) {
                 std::function<void()> task;
                 {
-                    std::unique_lock<std::mutex> lock(tasks_mtx, std::defer_lock);
+                    std::unique_lock<std::mutex> lock(tasks_mtx);
                     cond.wait(lock, [this]() {
                         return stop || !tasks.empty();
                     });
@@ -37,14 +37,3 @@ ThreadPool::~ThreadPool() {
         }
     }
 }
-
-// void ThreadPool::add(std::function<void()> func) {
-//     {
-//         std::unique_lock<std::mutex> lock(tasks_mtx);
-//         if (stop) {
-//             throw std::runtime_error("ThreadPool already stoped, can't add task any more!");
-//         }
-
-//         cond.notify_one();
-//     }
-// }

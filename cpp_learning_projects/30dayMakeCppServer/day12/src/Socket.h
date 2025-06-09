@@ -1,7 +1,6 @@
 #pragma once
 
 class InetAddress;
-
 class Socket {
     int fd;
 

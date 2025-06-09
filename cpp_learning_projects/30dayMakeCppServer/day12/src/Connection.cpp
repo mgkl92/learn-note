@@ -6,17 +6,17 @@
 
 #include <unistd.h>
 #include <string.h>
-#include <iostream>
 
 #define READ_BUFFER 1024
 
 Connection::Connection(EventLoop *loop_, Socket *sock_) :
     loop(loop_), sock(sock_), channel(nullptr), inBuffer(new std::string()), readBuffer(nullptr) {
     channel = new Channel(loop, sock->getFd());
+    channel->enableReading();
+    channel->useET();
 
     std::function<void()> callback = std::bind(&Connection::echo, this, sock->getFd());
     channel->setReadCallback(callback);
-    channel->enableReading();
 
     readBuffer = new Buffer();
 }
@@ -24,66 +24,39 @@ Connection::Connection(EventLoop *loop_, Socket *sock_) :
 Connection::~Connection() {
     delete channel;
     delete sock;
-    delete inBuffer;
     delete readBuffer;
 }
 
-// void Connection::echo(int sockfd) {
-//     char buf[READ_BUFFER];
-//     while (true) { // 由于使用非阻塞IO，读取客户端buffer，一次读取buf大小数据，直到全部读取完毕
-//         bzero(&buf, sizeof(buf));
-//         ssize_t bytes_read = ::read(sockfd, buf, sizeof(buf));
-//         if (bytes_read > 0) {
-//             printf("message from client fd %d: %s\n", sockfd, buf);
-//             ::write(sockfd, buf, sizeof(buf));
-//         } else if (bytes_read == -1 && errno == EINTR) { // 客户端正常中断、继续读取
-//             printf("continue reading");
-//             continue;
-//         } else if (bytes_read == -1 && ((errno == EAGAIN) || (errno == EWOULDBLOCK))) { // 非阻塞IO，这个条件表示数据全部读取完毕
-//             printf("finish reading once, errno: %d\n", errno);
-//             break;
-//         } else if (bytes_read == 0) { // EOF，客户端断开连接
-//             printf("EOF, client fd %d disconnected\n", sockfd);
-//             // close(sockfd);   //关闭socket会自动将文件描述符从epoll树上移除
-//             deleteConnectionCallback(sock);
-//             break;
-//         }
-//     }
-// }
-
 void Connection::echo(int sockfd) {
-    char buf[1024]; // 这个buf大小无所谓
-    while (true) {  // 由于使用非阻塞IO，读取客户端buffer，一次读取buf大小数据，直到全部读取完毕
+    printf("echo!");
+    char buf[1024];
+
+    while (true) {
         bzero(&buf, sizeof(buf));
-        ssize_t bytes_read = read(sockfd, buf, sizeof(buf));
-        if (bytes_read > 0) {
-            readBuffer->append(buf, bytes_read);
-        } else if (bytes_read == -1 && errno == EINTR) { // 客户端正常中断、继续读取
-            printf("continue reading");
+
+        ssize_t read_bytes = ::read(sockfd, buf, sizeof(buf));
+        if (read_bytes > 0) {
+            readBuffer->append(buf, read_bytes);
+        } else if (read_bytes == -1 && errno == EINTR) {
+            printf("continue reading.");
             continue;
-        } else if (bytes_read == -1 && ((errno == EAGAIN) || (errno == EWOULDBLOCK))) { // 非阻塞IO，这个条件表示数据全部读取完毕
-            printf("finish reading once\n");
+        } else if (read_bytes == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
             printf("message from client fd %d: %s\n", sockfd, readBuffer->c_str());
-            // errif(::write(sockfd, readBuffer->c_str(), readBuffer->size()) == -1, "socket write error");
             send(sockfd);
+
             readBuffer->clear();
             break;
-        } else if (bytes_read == 0) { // EOF，客户端断开连接
+        } else if (read_bytes == 0) {
             printf("EOF, client fd %d disconnected\n", sockfd);
-            // close(sockfd);   //关闭socket会自动将文件描述符从epoll树上移除
-            deleteConnectionCallback(sockfd);
+            // deleteConnectionCallback(sockfd);
             break;
         } else {
             printf("Connection reset by peer\n");
-            deleteConnectionCallback(sockfd); // 会有bug，注释后单线程无bug
+            // deleteConnectionCallback(sockfd);
             break;
         }
     }
 }
-
-// void Connection::setDeleteConnectionCallback(std::function<void(Socket *)> deleteConnectionCallback_) {
-//     deleteConnectionCallback = deleteConnectionCallback_;
-// }
 
 void Connection::setDeleteConnectionCallback(std::function<void(int)> deleteConnectionCallback_) {
     deleteConnectionCallback = deleteConnectionCallback_;
@@ -99,6 +72,7 @@ void Connection::send(int sockfd) {
         if (write_bytes == -1 && errno == EAGAIN) {
             break;
         }
+
         data_left -= write_bytes;
     }
 }
