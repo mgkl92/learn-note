@@ -51,8 +51,10 @@ int main() {
 
             if (already_read >= sendBuffer->size()) {
                 printf("message from server: %s\n", readBuffer->c_str());
+                break;
             }
         }
+
         readBuffer->clear();
     }
 

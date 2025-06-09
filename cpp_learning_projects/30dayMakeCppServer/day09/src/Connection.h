@@ -1,7 +1,6 @@
 #pragma once
 
 #include <functional>
-#include <string>
 
 class EventLoop;
 class Socket;
@@ -21,6 +20,7 @@ private:
     std::string *inBuffer;
 
     Buffer *readBuffer;
+
 public:
     Connection(EventLoop *, Socket *);
     

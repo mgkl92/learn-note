@@ -19,8 +19,6 @@ public:
 
     ~Server();
 
-    void handReadEvent(int);
-
     void newConnection(Socket *);
 
     void deleteConnection(Socket *);
