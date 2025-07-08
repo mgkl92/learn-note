@@ -32,7 +32,7 @@ void ThreadPool::work() {
     while (true) {
         std::function<void()> task;
         {
-            std::unique_lock<std::mutex> lock(mut, std::defer_lock);
+            std::unique_lock<std::mutex> lock(mut);
             cond.wait(lock, [&] {
                 return exit_flag || !tasks.empty();
             });
