@@ -60,7 +60,7 @@ auto ThreadPool::submit(F &&f, Args &&...args) -> std::future<typename std::resu
         });
     }
 
-    cond.notify_one();
+    cond.notify_all();
 
     return res;
 }
